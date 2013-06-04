@@ -21,25 +21,31 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.qualcomm.QCAR.QCAR;
+import com.qualcomm.ar.pl.CameraPreview;
 
 
 /** The main activity for the FrameMarkers sample. */
 public class FrameMarkers extends Activity
 {
+	private native String getDistance();
     // Menu item string constants:
     private static final String MENU_ITEM_ACTIVATE_CONT_AUTO_FOCUS =
         "Activate Cont. Auto focus";
@@ -69,6 +75,7 @@ public class FrameMarkers extends Activity
 
     // The view to display the sample splash screen:
     private ImageView mSplashScreenView;
+    private TextView distanceTextView;
 
     // The handler and runnable for the splash screen time out task:
     private Handler mSplashScreenHandler;
@@ -113,10 +120,40 @@ public class FrameMarkers extends Activity
     static
     {
         loadLibrary(NATIVE_LIB_QCAR);
-        loadLibrary(NATIVE_LIB_SAMPLE);
+        loadLibrary(NATIVE_LIB_SAMPLE); 
     }
 
-
+    private class ShowDistanceTask extends AsyncTask<Void, Void, Void> {
+    	private String distance = "0";
+    	private Toast myToast = null;
+    	
+		@Override
+		protected Void doInBackground(Void... params) {
+			while(true) 
+			{
+				distance = getDistance();
+				publishProgress(new Void[]{});
+				try {
+					Thread.currentThread().sleep(200);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+    	
+		protected void onProgressUpdate(Void... values)
+        {
+			if(myToast == null) {
+				myToast = Toast.makeText(getApplicationContext(), distance, Toast.LENGTH_SHORT);
+				
+			} else {
+				myToast.setText(distance);
+			}
+			myToast.show();  
+			Log.i("distance", distance);
+        }
+    }
+    
     /** An async task to initialize QCAR asynchronously. */
     private class InitQCARTask extends AsyncTask<Void, Integer, Boolean>
     {
@@ -510,6 +547,8 @@ public class FrameMarkers extends Activity
                 startCamera();
                 setProjectionMatrix();
 
+                new ShowDistanceTask().execute(new Void[]{});
+                
                 // Set continuous auto-focus if supported by the device,
                 // otherwise default back to regular auto-focus mode.
                 // This will be activated by a tap to the screen in this
