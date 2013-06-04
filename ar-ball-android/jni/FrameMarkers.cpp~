@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include <math.h>
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -44,136 +43,119 @@
 #include "R_object.h"
 
 #ifdef __cplusplus
-    extern "C"
-    {
+extern "C"
+{
 #endif
 
 // Textures:
-        int textureCount                = 0;
-        Texture** textures              = 0;
+int textureCount                = 0;
+Texture** textures              = 0;
 
 // OpenGL ES 2.0 specific:
-        unsigned int shaderProgramID    = 0;
-        GLint vertexHandle              = 0;
-        GLint normalHandle              = 0;
-        GLint textureCoordHandle        = 0;
-        GLint mvpMatrixHandle           = 0;
-        GLint texSampler2DHandle        = 0;
+unsigned int shaderProgramID    = 0;
+GLint vertexHandle              = 0;
+GLint normalHandle              = 0;
+GLint textureCoordHandle        = 0;
+GLint mvpMatrixHandle           = 0;
+GLint texSampler2DHandle        = 0;
 
 // Screen dimensions:
-        unsigned int screenWidth        = 0;
-        unsigned int screenHeight       = 0;
+unsigned int screenWidth        = 0;
+unsigned int screenHeight       = 0;
 
 // Indicates whether screen is in portrait (true) or landscape (false) mode
-        bool isActivityInPortraitMode   = false;
+bool isActivityInPortraitMode   = false;
 
 // The projection matrix used for rendering virtual objects:
-        QCAR::Matrix44F projectionMatrix;
+QCAR::Matrix44F projectionMatrix;
 
 // Constants:
-        static const float kLetterScale        = 25.0f;
-        static const float kLetterTranslate    = 25.0f;
+static const float kLetterScale        = 25.0f;
+static const float kLetterTranslate    = 25.0f;
 
 
-// distance
-        float distance[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+JNIEXPORT void JNICALL
+Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_setActivityPortraitMode(JNIEnv *, jobject, jboolean isPortrait)
+{
+    isActivityInPortraitMode = isPortrait;
+}
 
-        JNIEXPORT void JNICALL
-        Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_setActivityPortraitMode(JNIEnv *, jobject, jboolean isPortrait)
-        {
-            isActivityInPortraitMode = isPortrait;
-        }
 
-        JNIEXPORT jstring JNICALL 
-        Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_getDistance( JNIEnv* env, jobject o) 
-        {
-          char dist[255];
-          sprintf(dist, "Q=%.2f, C=%.2f, A=%.2f, R=%.2f", distance[0], distance[1], distance[2], distance[3]);
-          const char * cdist = dist;
-          return (*env). NewStringUTF(cdist);
-      }
-
-      JNIEXPORT int JNICALL
-      Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_initTracker(JNIEnv *, jobject)
-      {
-        LOG("Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_initTracker");
-
+JNIEXPORT int JNICALL
+Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_initTracker(JNIEnv *, jobject)
+{
+    LOG("Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_initTracker");
+    
     // Initialize the marker tracker:
-        QCAR::TrackerManager& trackerManager = QCAR::TrackerManager::getInstance();
-        QCAR::Tracker* trackerBase = trackerManager.initTracker(QCAR::Tracker::MARKER_TRACKER);
-        QCAR::MarkerTracker* markerTracker = static_cast<QCAR::MarkerTracker*>(trackerBase);
-        if (markerTracker == NULL)
-        {
-            LOG("Failed to initialize MarkerTracker.");
-            return 0;
-        }
-
-        if (!markerTracker->createFrameMarker(0, "MarkerQ", QCAR::Vec2F(50,50)))
-        {
-            LOG("Failed to create frame marker Q.");
-        }
-        if (!markerTracker->createFrameMarker(1, "MarkerC", QCAR::Vec2F(50,50)))
-        {
-            LOG("Failed to create frame marker C.");
-        }
-        if (!markerTracker->createFrameMarker(2, "MarkerA", QCAR::Vec2F(50,50)))
-        {
-            LOG("Failed to create frame marker A.");
-        }
-        if (!markerTracker->createFrameMarker(3, "MarkerR", QCAR::Vec2F(50,50)))
-        {
-            LOG("Failed to create frame marker R.");
-        }
-
-        LOG("Successfully initialized MarkerTracker.");
-
-        return 1;
-    }
-
-
-    JNIEXPORT void JNICALL
-    Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_deinitTracker(JNIEnv *, jobject)
+    QCAR::TrackerManager& trackerManager = QCAR::TrackerManager::getInstance();
+    QCAR::Tracker* trackerBase = trackerManager.initTracker(QCAR::Tracker::MARKER_TRACKER);
+    QCAR::MarkerTracker* markerTracker = static_cast<QCAR::MarkerTracker*>(trackerBase);
+    if (markerTracker == NULL)
     {
-        LOG("Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_deinitTracker");
+        LOG("Failed to initialize MarkerTracker.");
+        return 0;
+    }
+    
+    if (!markerTracker->createFrameMarker(0, "MarkerQ", QCAR::Vec2F(50,50)))
+    {
+        LOG("Failed to create frame marker Q.");
+    }
+    if (!markerTracker->createFrameMarker(1, "MarkerC", QCAR::Vec2F(50,50)))
+    {
+        LOG("Failed to create frame marker C.");
+    }
+    if (!markerTracker->createFrameMarker(2, "MarkerA", QCAR::Vec2F(50,50)))
+    {
+        LOG("Failed to create frame marker A.");
+    }
+    if (!markerTracker->createFrameMarker(3, "MarkerR", QCAR::Vec2F(50,50)))
+    {
+        LOG("Failed to create frame marker R.");
+    }
+    
+    LOG("Successfully initialized MarkerTracker.");
+
+    return 1;
+}
+
+
+JNIEXPORT void JNICALL
+    Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_deinitTracker(JNIEnv *, jobject)
+{
+    LOG("Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_deinitTracker");
 
     // Deinit the marker tracker, this will destroy all created frame markers:
-        QCAR::TrackerManager& trackerManager = QCAR::TrackerManager::getInstance();
-        trackerManager.deinitTracker(QCAR::Tracker::MARKER_TRACKER);
-    }
+    QCAR::TrackerManager& trackerManager = QCAR::TrackerManager::getInstance();
+    trackerManager.deinitTracker(QCAR::Tracker::MARKER_TRACKER);
+}
 
 
-    JNIEXPORT void JNICALL
-    Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkersRenderer_renderFrame(JNIEnv *, jobject)
-    {
+JNIEXPORT void JNICALL
+Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkersRenderer_renderFrame(JNIEnv *, jobject)
+{
     //LOG("Java_com_qualcomm_QCARSamples_FrameMarkers_GLRenderer_renderFrame");
-
+ 
     // Clear color and depth buffer 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Get the state from QCAR and mark the beginning of a rendering section
-        QCAR::State state = QCAR::Renderer::getInstance().begin();
+    QCAR::State state = QCAR::Renderer::getInstance().begin();
 
     // Explicitly render the Video Background
-        QCAR::Renderer::getInstance().drawVideoBackground();
-
-        glEnable(GL_DEPTH_TEST);
+    QCAR::Renderer::getInstance().drawVideoBackground();
+    
+    glEnable(GL_DEPTH_TEST);
 
     // We must detect if background reflection is active and adjust the culling direction. 
     // If the reflection is active, this means the post matrix has been reflected as well,
     // therefore standard counter clockwise face culling will result in "inside out" models. 
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
-        if(QCAR::Renderer::getInstance().getVideoBackgroundConfig().mReflection == QCAR::VIDEO_BACKGROUND_REFLECTION_ON)
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    if(QCAR::Renderer::getInstance().getVideoBackgroundConfig().mReflection == QCAR::VIDEO_BACKGROUND_REFLECTION_ON)
         glFrontFace(GL_CW);  //Front camera
     else
         glFrontFace(GL_CCW);   //Back camera
 
-
-    // volatile
-    for(int i = 0 ; i < 4; i++) 
-    {
-        distance[i] = 0.0f;
-    }
 
     // Did we find any trackables this frame?
     for(int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
@@ -181,26 +163,16 @@
         // Get the trackable:
         const QCAR::TrackableResult* trackableResult = state.getTrackableResult(tIdx);
         QCAR::Matrix44F modelViewMatrix =
-        QCAR::Tool::convertPose2GLMatrix(trackableResult->getPose());        
-
+            QCAR::Tool::convertPose2GLMatrix(trackableResult->getPose());        
+      
         // Choose the texture based on the target name:
         int textureIndex = 0;
         
         // Check the type of the trackable:
         assert(trackableResult->getType() == QCAR::TrackableResult::MARKER_RESULT);
         const QCAR::MarkerResult* markerResult = static_cast<
-        const QCAR::MarkerResult*>(trackableResult);
+                                    const QCAR::MarkerResult*>(trackableResult);
         const QCAR::Marker& marker = markerResult->getTrackable();
-
-        // get distance to marker
-        QCAR::Matrix34F pose = markerResult->getPose();
-        QCAR::Vec3F position(pose.data[3], pose.data[7], pose.data[11]);
-                
-        distance[marker.getMarkerId()] = sqrt(position.data[0] * position.data[0] +
-            position.data[1]* position.data[1] +
-            position.data[2] * position.data[2]);
-                
-        LOG("distance %f", distance);
 
         textureIndex = marker.getMarkerId();
         
@@ -216,28 +188,28 @@
 
         switch (marker.getMarkerId())
         {
-            case 0:
+        case 0:
             vertices = &QobjectVertices[0];
             normals = &QobjectNormals[0];
             indices = &QobjectIndices[0];
             texCoords = &QobjectTexCoords[0];
             numIndices = NUM_Q_OBJECT_INDEX;
             break;
-            case 1:
+        case 1:
             vertices = &CobjectVertices[0];
             normals = &CobjectNormals[0];
             indices = &CobjectIndices[0];
             texCoords = &CobjectTexCoords[0];
             numIndices = NUM_C_OBJECT_INDEX;
             break;
-            case 2:
+        case 2:
             vertices = &AobjectVertices[0];
             normals = &AobjectNormals[0];
             indices = &AobjectIndices[0];
             texCoords = &AobjectTexCoords[0];
             numIndices = NUM_A_OBJECT_INDEX;
             break;
-            default:
+        default:
             vertices = &RobjectVertices[0];
             normals = &RobjectNormals[0];
             indices = &RobjectIndices[0];
@@ -249,21 +221,21 @@
         QCAR::Matrix44F modelViewProjection;
 
         SampleUtils::translatePoseMatrix(-kLetterTranslate,
-           -kLetterTranslate,
-           0.f,
-           &modelViewMatrix.data[0]);
+                                         -kLetterTranslate,
+                                         0.f,
+                                         &modelViewMatrix.data[0]);
         SampleUtils::scalePoseMatrix(kLetterScale, kLetterScale, kLetterScale,
-           &modelViewMatrix.data[0]);
+                                     &modelViewMatrix.data[0]);
         SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
-            &modelViewMatrix.data[0],
-            &modelViewProjection.data[0]);
+                                    &modelViewMatrix.data[0],
+                                    &modelViewProjection.data[0]);
 
         glUseProgram(shaderProgramID);
-
+ 
         glVertexAttribPointer(vertexHandle, 3, GL_FLOAT, GL_FALSE, 0, vertices);
         glVertexAttribPointer(normalHandle, 3, GL_FLOAT, GL_FALSE, 0, normals);
         glVertexAttribPointer(textureCoordHandle, 2, GL_FLOAT, GL_FALSE,
-          0, texCoords);
+                              0, texCoords);
 
         glEnableVertexAttribArray(vertexHandle);
         glEnableVertexAttribArray(normalHandle);
@@ -272,7 +244,7 @@
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, thisTexture->mTextureID);
         glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
-         (GLfloat*)&modelViewProjection.data[0]);
+                           (GLfloat*)&modelViewProjection.data[0]);
         glUniform1i(texSampler2DHandle, 0 /*GL_TEXTURE0*/);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_SHORT, indices);
 
@@ -295,7 +267,7 @@ configureVideoBackground()
     // Get the default video mode:
     QCAR::CameraDevice& cameraDevice = QCAR::CameraDevice::getInstance();
     QCAR::VideoMode videoMode = cameraDevice.
-    getVideoMode(QCAR::CameraDevice::MODE_DEFAULT);
+                                getVideoMode(QCAR::CameraDevice::MODE_DEFAULT);
 
     // Configure the video background
     QCAR::VideoBackgroundConfig config;
@@ -308,7 +280,7 @@ configureVideoBackground()
     {
         //LOG("configureVideoBackground PORTRAIT");
         config.mSize.data[0] = videoMode.mHeight
-        * (screenHeight / (float)videoMode.mWidth);
+                                * (screenHeight / (float)videoMode.mWidth);
         config.mSize.data[1] = screenHeight;
 
         if(config.mSize.data[0] < screenWidth)
@@ -316,7 +288,7 @@ configureVideoBackground()
             LOG("Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
             config.mSize.data[0] = screenWidth;
             config.mSize.data[1] = screenWidth * 
-            (videoMode.mWidth / (float)videoMode.mHeight);
+                              (videoMode.mWidth / (float)videoMode.mHeight);
         }
     }
     else
@@ -324,13 +296,13 @@ configureVideoBackground()
         //LOG("configureVideoBackground LANDSCAPE");
         config.mSize.data[0] = screenWidth;
         config.mSize.data[1] = videoMode.mHeight
-        * (screenWidth / (float)videoMode.mWidth);
+                            * (screenWidth / (float)videoMode.mWidth);
 
         if(config.mSize.data[1] < screenHeight)
         {
             LOG("Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
             config.mSize.data[0] = screenHeight
-            * (videoMode.mWidth / (float)videoMode.mHeight);
+                                * (videoMode.mWidth / (float)videoMode.mHeight);
             config.mSize.data[1] = screenHeight;
         }
     }
@@ -344,19 +316,19 @@ configureVideoBackground()
 
 JNIEXPORT void JNICALL
 Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_initApplicationNative(
-    JNIEnv* env, jobject obj, jint width, jint height)
+                            JNIEnv* env, jobject obj, jint width, jint height)
 {
     LOG("Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_initApplicationNative");
     
     // Store screen dimensions
     screenWidth = width;
     screenHeight = height;
-
+        
     // Handle to the activity class:
     jclass activityClass = env->GetObjectClass(obj);
 
     jmethodID getTextureCountMethodID = env->GetMethodID(activityClass,
-        "getTextureCount", "()I");
+                                                    "getTextureCount", "()I");
     if (getTextureCountMethodID == 0)
     {
         LOG("Function getTextureCount() not found.");
@@ -399,7 +371,7 @@ Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_initApplicationNative(
 
 JNIEXPORT void JNICALL
 Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_deinitApplicationNative(
-    JNIEnv* env, jobject obj)
+                                                        JNIEnv* env, jobject obj)
 {
     LOG("Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_deinitApplicationNative");
 
@@ -411,7 +383,7 @@ Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_deinitApplicationNative(
             delete textures[i];
             textures[i] = NULL;
         }
-
+    
         delete[]textures;
         textures = NULL;
         
@@ -422,7 +394,7 @@ Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_deinitApplicationNative(
 
 JNIEXPORT void JNICALL
 Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_startCamera(JNIEnv *,
-   jobject)
+                                                                         jobject)
 {
     LOG("Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_startCamera");
     
@@ -439,7 +411,7 @@ Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_startCamera(JNIEnv *,
 
     // Select the default mode:
     if (!QCAR::CameraDevice::getInstance().selectVideoMode(
-        QCAR::CameraDevice::MODE_DEFAULT))
+                                QCAR::CameraDevice::MODE_DEFAULT))
         return;
 
     // Start the camera:
@@ -456,7 +428,7 @@ Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_startCamera(JNIEnv *,
 
 JNIEXPORT void JNICALL
 Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_stopCamera(JNIEnv *,
- jobject)
+                                                                   jobject)
 {
     LOG("Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_stopCamera");
     
@@ -477,7 +449,7 @@ Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_setProjectionMatrix(JNIE
 
     // Cache the projection matrix:
     const QCAR::CameraCalibration& cameraCalibration =
-    QCAR::CameraDevice::getInstance().getCameraCalibration();
+                                QCAR::CameraDevice::getInstance().getCameraCalibration();
     projectionMatrix = QCAR::Tool::getProjectionGL(cameraCalibration, 2.0f, 2500.0f);
 }
 
@@ -496,23 +468,23 @@ Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_setFocusMode(JNIEnv*, jo
     switch ((int)mode)
     {
         case 0:
-        qcarFocusMode = QCAR::CameraDevice::FOCUS_MODE_NORMAL;
-        break;
+            qcarFocusMode = QCAR::CameraDevice::FOCUS_MODE_NORMAL;
+            break;
         
         case 1:
-        qcarFocusMode = QCAR::CameraDevice::FOCUS_MODE_CONTINUOUSAUTO;
-        break;
-
+            qcarFocusMode = QCAR::CameraDevice::FOCUS_MODE_CONTINUOUSAUTO;
+            break;
+            
         case 2:
-        qcarFocusMode = QCAR::CameraDevice::FOCUS_MODE_INFINITY;
-        break;
-
+            qcarFocusMode = QCAR::CameraDevice::FOCUS_MODE_INFINITY;
+            break;
+            
         case 3:
-        qcarFocusMode = QCAR::CameraDevice::FOCUS_MODE_MACRO;
-        break;
-
+            qcarFocusMode = QCAR::CameraDevice::FOCUS_MODE_MACRO;
+            break;
+    
         default:
-        return JNI_FALSE;
+            return JNI_FALSE;
     }
     
     return QCAR::CameraDevice::getInstance().setFocusMode(qcarFocusMode) ? JNI_TRUE : JNI_FALSE;
@@ -521,7 +493,7 @@ Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkers_setFocusMode(JNIEnv*, jo
 
 JNIEXPORT void JNICALL
 Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkersRenderer_initRendering(
-    JNIEnv* env, jobject obj)
+                                                    JNIEnv* env, jobject obj)
 {
     LOG("Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkersRenderer_initRendering");
 
@@ -535,30 +507,30 @@ Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkersRenderer_initRendering(
         glBindTexture(GL_TEXTURE_2D, textures[i]->mTextureID);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textures[i]->mWidth,
-            textures[i]->mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-            (GLvoid*)  textures[i]->mData);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textures[i]->mWidth,
+                textures[i]->mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                (GLvoid*)  textures[i]->mData);
     }
-
+  
     shaderProgramID     = SampleUtils::createProgramFromBuffer(cubeMeshVertexShader,
-        cubeFragmentShader);
+                                                            cubeFragmentShader);
 
     vertexHandle        = glGetAttribLocation(shaderProgramID,
-        "vertexPosition");
+                                                "vertexPosition");
     normalHandle        = glGetAttribLocation(shaderProgramID,
-        "vertexNormal");
+                                                "vertexNormal");
     textureCoordHandle  = glGetAttribLocation(shaderProgramID,
-        "vertexTexCoord");
+                                                "vertexTexCoord");
     mvpMatrixHandle     = glGetUniformLocation(shaderProgramID,
-        "modelViewProjectionMatrix");
+                                                "modelViewProjectionMatrix");
     texSampler2DHandle  = glGetUniformLocation(shaderProgramID, 
-        "texSampler2D");
+                                                "texSampler2D");
 }
 
 
 JNIEXPORT void JNICALL
 Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkersRenderer_updateRendering(
-    JNIEnv* env, jobject obj, jint width, jint height)
+                        JNIEnv* env, jobject obj, jint width, jint height)
 {
     LOG("Java_com_qualcomm_QCARSamples_FrameMarkers_FrameMarkersRenderer_updateRendering");
     

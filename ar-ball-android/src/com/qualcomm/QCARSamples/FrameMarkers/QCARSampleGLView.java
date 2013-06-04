@@ -196,7 +196,7 @@ public class QCARSampleGLView extends GLSurfaceView
 
 
         private int findConfigAttrib(
-            EGL10 egl, EGLDisplay display, EGLConfig config, int attribute,
+            EGL10 egl, EGLDisplay display, EGLConfig config, int attribute, 
             int defaultValue)
         {
 
